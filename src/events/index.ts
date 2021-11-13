@@ -1,8 +1,14 @@
-import { GatewayMessage, Op, OpCode } from "@hecate-org/blingaton-types/build";
+import {
+  AuthStartMessage,
+  GatewayMessage,
+  Op,
+  OpCode,
+} from "@hecate-org/blingaton-types/build";
 import { replyAuth, replyAuthMessage } from "../utils/socketCommunication";
 
 import { Socket } from "socket.io";
 import { addSocketConnection } from "../utils/socketConnections";
+import crypto from "crypto";
 import fs from "fs";
 //requiring path and fs modules
 import path from "path";
@@ -43,18 +49,64 @@ export const reloadEvents = () => {
   searchDir("");
 };
 
-const isGatewayMessage = (object: any): object is GatewayMessage => {
-  return (object as GatewayMessage)?.op !== undefined;
-};
+const isAuthStartMessage = (object: any): object is AuthStartMessage =>
+  (object as AuthStartMessage)?.pub !== undefined;
+
+const isGatewayMessage = (object: any): object is GatewayMessage =>
+  (object as GatewayMessage)?.op !== undefined;
+
+/** A buffer for all sessions which are currently being validated. */
+const isAuthenticating: { [k: string]: string } = {};
+
+/** Stores properly validated sessions. */
+const sessions: { [k: string]: string } = {};
 
 const EventHandlers = {
   [OpCode.auth_start]: (s: Socket, data: GatewayMessage) => {
+    if (sessions?.[s.id])
+      return replyAuthMessage(s, OpCode.exception, "A session already exists!");
+
+    if (isAuthenticating?.[s.id])
+      return replyAuthMessage(
+        s,
+        OpCode.exception,
+        "Session is already being secured."
+      );
+
+    if (!isAuthStartMessage(data)) {
+      return replyAuthMessage(
+        s,
+        OpCode.exception,
+        "Invalid AuthStartMessage object!"
+      );
+    }
+
+    const secretToken = crypto.randomBytes(64).toString("base64");
+
     replyAuth(s, OpCode.auth_reply, {
-      // TODO: Fix encryption thingie
+      key: crypto
+        .publicEncrypt(
+          {
+            key: data.pub,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: "sha256",
+          },
+          Buffer.from(secretToken)
+        )
+        .toString("base64"),
     });
+    isAuthenticating[s.id] = secretToken;
   },
-  [OpCode.auth_success]: (s: Socket, data: GatewayMessage) => {
-    // Store client encryption key in ram
+  [OpCode.auth_success]: (s: Socket, _: any) => {
+    if (sessions?.[s.id] || !isAuthenticating?.[s.id])
+      return replyAuthMessage(
+        s,
+        OpCode.exception,
+        "Session already exists or has not been started yet!"
+      );
+    
+    sessions[s.id] = isAuthenticating[s.id];
+    delete isAuthenticating[s.id];
   },
 };
 
