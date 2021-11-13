@@ -1,10 +1,11 @@
-import { OpCode } from "@hecate-org/blingaton-types/build";
+import { GatewayMessage, Op, OpCode } from "@hecate-org/blingaton-types/build";
+import { replyAuth, replyAuthMessage } from "../utils/socketCommunication";
+
 import { Socket } from "socket.io";
 import { addSocketConnection } from "../utils/socketConnections";
 import fs from "fs";
 //requiring path and fs modules
 import path from "path";
-import { replyMessage } from "../utils/socketCommunication";
 
 interface eventFile {
   name: string;
@@ -42,14 +43,32 @@ export const reloadEvents = () => {
   searchDir("");
 };
 
+const isGatewayMessage = (object: any): object is GatewayMessage => {
+  return (object as GatewayMessage)?.op !== undefined;
+};
+
+const EventHandlers = {
+  [OpCode.auth_start]: (s: Socket, data: GatewayMessage) => {
+    replyAuth(s, OpCode.auth_reply, {
+      // TODO: Fix encryption thingie
+    });
+  },
+  [OpCode.auth_success]: (s: Socket, data: GatewayMessage) => {
+    // Store client encryption key in ram
+  },
+};
+
+type IndexedHandlers = keyof typeof EventHandlers;
+type HandlerCallback = (s: Socket, data: GatewayMessage) => void;
+
 export const connectSocket = (socket: Socket) => {
   eventList.forEach((event: eventFile) => {
-    socket.on(event.name, (props: any) => {
-      if (typeof props != "object") {
+    socket.on(event.name, (data: any) => {
+      if (typeof data != "object") {
         try {
-          props = JSON.parse(props) as object;
+          data = JSON.parse(data) as object;
         } catch (e) {
-          return replyMessage(
+          return replyAuthMessage(
             socket,
             OpCode.exception,
             `Invalid payload body (must be valid JSON). [${e}]`
@@ -57,7 +76,27 @@ export const connectSocket = (socket: Socket) => {
         }
       }
 
-      event.event(socket, props as object);
+      if (isGatewayMessage(data)) {
+        const handler: HandlerCallback | undefined =
+          EventHandlers?.[data.op as IndexedHandlers];
+
+        if (handler == undefined) {
+          if (Object.values(OpCode).includes(data.op))
+            return replyAuthMessage(
+              socket,
+              OpCode.exception,
+              "The received OpCode can only be sent by the server."
+            );
+          return event.event(socket, data);
+        }
+
+        handler(socket, data);
+      } else
+        replyAuthMessage(
+          socket,
+          OpCode.exception,
+          "Invalid structure. An opcode must be present in the message."
+        );
     });
   });
 };
