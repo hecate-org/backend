@@ -1,11 +1,11 @@
+//requiring path and fs modules
+import path from "path"
+import fs from "fs"
+
 interface eventFile {
   name: string;
   event: (socket: object, props: any) => Promise<void>;
 }
-
-//requiring path and fs modules
-const path = require("path");
-const fs = require("fs");
 
 let eventList: eventFile[] = [];
 
@@ -17,7 +17,7 @@ module.exports = {
       //joining path of directory
       const directoryPath = path.join(__dirname + dir);
       //passsing directoryPath and callback function
-      fs.readdir(directoryPath, function (err: string, files: string[]) {
+      fs.readdir(directoryPath, (err: NodeJS.ErrnoException | null, files: string[]) => {
         //handling error
         if (err) {
           return console.log("Unable to scan directory: " + err);

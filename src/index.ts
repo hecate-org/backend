@@ -12,7 +12,7 @@ const io = new Server(server, {
 });
 
 const eventHandler = require("./events");
-const actionHandler = require("./utils");
+const utilHandler = require("./utils");
 
 server.listen(4000, async () => {
   console.log("listening to request on port 4000");
