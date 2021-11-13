@@ -147,7 +147,7 @@ export const connectSocket = (socket: Socket) => {
               "The session has not been secured yet, which is required for communication to happen."
             );
 
-          if (data.data) data = AES.decrypt(data.data, token) as object;
+          if (data?.data) data = AES.decrypt(data.data, token) as object;
 
           return event.event(socket, data);
         }
