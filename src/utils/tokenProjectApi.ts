@@ -1,7 +1,7 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 
-import { Message } from "@hecate-org/blingaton-types/build";
-import { response } from "express";
+// import { Message } from "@hecate-org/blingaton-types/build";
+// import { response } from "express";
 
 class TokenProjectApi {
   private readonly token: string;
@@ -12,12 +12,16 @@ class TokenProjectApi {
   }
 
   public async save(data: object): Promise<any> {
-    const res = await axios.post(this.BASE_URL + "/ipfs/object/put", data, {
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        contentType: "application/json",
-      },
-    });
+    const res = await axios.post(
+      this.BASE_URL + "/ipfs/object/put",
+      { data },
+      {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          contentType: "application/json",
+        },
+      }
+    );
 
     console.log(res);
     return res;

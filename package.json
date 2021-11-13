@@ -30,7 +30,11 @@
     "socket.io": "^4.3.2"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "@hecate-org/blingaton-types": "^1.0.10",
+=======
+    "@hecate-org/blingaton-types": "^1.0.9",
+>>>>>>> a2a0d5e3e8db2aab5425cb44e525bab4625f2fbc
     "@types/axios": "^0.14.0",
     "@types/node": "^16.11.7",
     "nodemon": "^2.0.15",
