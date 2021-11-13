@@ -1,16 +1,14 @@
 import {
   AuthStartMessage,
   GatewayMessage,
-  Op,
-  OpCode,
+  OpCode
 } from "@hecate-org/blingaton-types/build";
 import { replyAuth, replyAuthMessage } from "../utils/socketCommunication";
 
+import { AES } from "crypto-js";
 import { Socket } from "socket.io";
-import { addSocketConnection } from "../utils/socketConnections";
 import crypto from "crypto";
 import fs from "fs";
-//requiring path and fs modules
 import path from "path";
 
 interface eventFile {
@@ -104,7 +102,7 @@ const EventHandlers = {
         OpCode.exception,
         "Session already exists or has not been started yet!"
       );
-    
+
     sessions[s.id] = isAuthenticating[s.id];
     delete isAuthenticating[s.id];
   },
@@ -139,6 +137,18 @@ export const connectSocket = (socket: Socket) => {
               OpCode.exception,
               "The received OpCode can only be sent by the server."
             );
+
+          const token: string | undefined = sessions?.[socket.id];
+
+          if (!token)
+            return replyAuthMessage(
+              socket,
+              OpCode.exception,
+              "The session has not been secured yet, which is required for communication to happen."
+            );
+
+          if (data.data) data = AES.decrypt(data.data, token) as object;
+
           return event.event(socket, data);
         }
 
