@@ -1,37 +1,46 @@
 import { GatewayMessage, Op, OpCode } from "@hecate-org/blingaton-types/build";
+import { reply, replyMessage } from "../utils/socketCommunication";
 
 import { Socket } from "socket.io";
-import TokenProjectApi from "../utils/tokenProjectApi";
 
 const isGatewayMessage = (object: any): object is GatewayMessage => {
   return (object as GatewayMessage)?.op !== undefined;
 };
 
 const EventHandlers = {
-  [OpCode.auth_start]: (socket: Socket, data: GatewayMessage) => {},
+  [OpCode.auth_start]: (s: Socket, data: GatewayMessage) => {
+    reply(s, OpCode.auth_reply, {
+      // TODO: Fix encryption thingie
+    });
+  },
+  [OpCode.auth_success]: (s: Socket, data: GatewayMessage) => {
+    // Store client encryption key in ram
+  },
 };
 
-const reply = (socket: Socket, op: Op, data?: object) => {
-  socket.emit("message", {
-    op,
-    data,
-  });
-};
+type IndexedHandlers = keyof typeof EventHandlers;
+type HandlerCallback = (s: Socket, data: GatewayMessage) => void;
 
 module.exports = {
   name: "message",
   event: async (s: Socket, data: object) => {
-    console.log("dt", isGatewayMessage(data));
     if (isGatewayMessage(data)) {
-      console.log(data);
+      const handler: HandlerCallback | undefined =
+        EventHandlers?.[data.op as IndexedHandlers];
+
+      if (handler == undefined)
+        return replyMessage(
+          s,
+          OpCode.exception,
+          "The received OPCode can only be sent by the server or does not exist."
+        );
+
+      handler(s, data);
     }
-    reply(s, OpCode.exception, {
-      message: "Invalid structure. An opcode must be present in the message.",
-    });
-    // await TokenProjectApi.save({
-    //   data: {
-    //     sample: "test"
-    //   }
-    // })
+    replyMessage(
+      s,
+      OpCode.exception,
+      "Invalid structure. An opcode must be present in the message."
+    );
   },
 };

@@ -1,7 +1,9 @@
+import { OpCode } from "@hecate-org/blingaton-types/build";
 import { Socket } from "socket.io";
 import fs from "fs";
 //requiring path and fs modules
 import path from "path";
+import { replyMessage } from "../utils/socketCommunication";
 
 interface eventFile {
   name: string;
@@ -43,7 +45,19 @@ export const connectSocket = (socket: Socket) => {
   console.log(eventList);
   eventList.forEach((event: eventFile) => {
     socket.on(event.name, (props: any) => {
-      event.event(socket, props);
+      if (typeof props != "object") {
+        try {
+          props = JSON.parse(props) as object;
+        } catch (e) {
+          return replyMessage(
+            socket,
+            OpCode.exception,
+            `Invalid payload body (must be valid JSON). [${e}]`
+          );
+        }
+      }
+
+      event.event(socket, props as object);
     });
   });
 };
