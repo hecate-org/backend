@@ -1,6 +1,7 @@
 import { Server, Socket } from "socket.io";
-
 import { connectSocket, reloadEvents } from "./events";
+
+import dotenv from "dotenv";
 import express from "express";
 import http from "http";
 
@@ -11,6 +12,8 @@ const io = new Server(server, {
     origin: "*",
   },
 });
+
+dotenv.config();
 
 server.listen(4000, async () => {
   await reloadEvents();
