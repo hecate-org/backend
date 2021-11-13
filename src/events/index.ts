@@ -1,4 +1,5 @@
 import { Socket } from "socket.io";
+import { addSocketConnection } from "../utils/socketConnections";
 import fs from "fs";
 //requiring path and fs modules
 import path from "path";
@@ -40,7 +41,6 @@ export const reloadEvents = () => {
 };
 
 export const connectSocket = (socket: Socket) => {
-  console.log(eventList);
   eventList.forEach((event: eventFile) => {
     socket.on(event.name, (props: any) => {
       event.event(socket, props);
