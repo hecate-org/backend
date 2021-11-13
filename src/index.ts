@@ -21,5 +21,6 @@ server.listen(4000, async () => {
 });
 
 io.on("connection", async (socket: Socket) => {
+  console.log("socket connected: " + socket.id)
   await connectSocket(socket);
 });
