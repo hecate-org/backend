@@ -1,18 +1,23 @@
+interface eventFile {
+  name: string;
+  event: (socket: object, props: any) => Promise<void>;
+}
+
 //requiring path and fs modules
 const path = require("path");
 const fs = require("fs");
 
-eventList = [];
+let eventList: eventFile[] = [];
 
 module.exports = {
   reloadEvents: async function () {
     //gets all events functions in folder
     await searchDir("");
-    function searchDir(dir) {
+    function searchDir(dir: string) {
       //joining path of directory
       const directoryPath = path.join(__dirname + dir);
       //passsing directoryPath and callback function
-      fs.readdir(directoryPath, function (err, files) {
+      fs.readdir(directoryPath, function (err: string, files: string[]) {
         //handling error
         if (err) {
           return console.log("Unable to scan directory: " + err);
@@ -20,7 +25,7 @@ module.exports = {
         files.forEach((file) => {
           console.log("scanned: " + file);
           if (!file.includes(".")) searchDir(`${dir}/${file}`);
-          if (file.includes(".js") && file != "index.js") {
+          if (file.includes(".ts") && file != "index.ts") {
             let event = require(`${__dirname}${dir}/${file}`);
             if (!eventList.includes(event)) {
               eventList.push(require(`${__dirname}${dir}/${file}`));
@@ -30,9 +35,9 @@ module.exports = {
       });
     }
   },
-  connectSocket: async (socket) => {
-    eventList.forEach((event) => {
-      socket.on(event.name, async (props) => {
+  connectSocket: async (socket: any) => {
+    eventList.forEach((event: eventFile) => {
+      socket.on(event.name, async (props: any) => {
         await event.event(socket, props);
       });
     });
