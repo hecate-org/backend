@@ -34,11 +34,4 @@ model User {
   name      String?  @db.VarChar(255)
   Message   Message[]
   Channel   Channel[]
-  User SocketConnection[]
-}
-
-model SocketConnection{
-  id      String   @id
-  userId  Int
-  User    User     @relation(fields: [userId], references: [id])
 }
