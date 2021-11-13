@@ -1,7 +1,7 @@
+import { Socket } from "socket.io";
+import fs from "fs";
 //requiring path and fs modules
 import path from "path";
-import fs from "fs";
-import { Socket } from "socket.io";
 
 interface eventFile {
   name: string;
@@ -10,9 +10,7 @@ interface eventFile {
 
 let eventList: eventFile[] = [];
 
-export const reloadEvents = async () => {
-  //gets all events functions in folder
-  await searchDir("");
+export const reloadEvents = () => {
   function searchDir(dir: string) {
     //joining path of directory
     const directoryPath = path.join(__dirname + dir);
@@ -37,12 +35,15 @@ export const reloadEvents = async () => {
       }
     );
   }
+  //gets all events functions in folder
+  searchDir("");
 };
 
 export const connectSocket = (socket: Socket) => {
+  console.log(eventList);
   eventList.forEach((event: eventFile) => {
-    socket.on(event.name, async (props: any) => {
-      await event.event(socket, props);
+    socket.on(event.name, (props: any) => {
+      event.event(socket, props);
     });
   });
 };

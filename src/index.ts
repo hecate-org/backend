@@ -16,7 +16,7 @@ const io = new Server(server, {
 dotenv.config();
 
 server.listen(4000, async () => {
-  await reloadEvents();
+  reloadEvents();
   console.log("listening to request on port 4000");
 });
 

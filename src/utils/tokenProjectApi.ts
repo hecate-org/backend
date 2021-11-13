@@ -1,32 +1,30 @@
 import { Message } from "@hecate-org/blingaton-types/build";
 import axios from "axios";
+import { response } from "express";
 
 class TokenProjectApi {
-  private readonly id: string;
-  private readonly secret: string;
   private readonly token: string;
-  private readonly BASE_URL = "https://api.testnet.token-project.eu";
+  private readonly BASE_URL = "https://api.token-project.eu";
 
   constructor() {
-    this.id = process.env.APP_ID!;
-    this.secret = process.env.APP_SECRET!;
-    this.token = process.env.APP_TOKEN!
+    this.token = process.env.APP_TOKEN!;
   }
 
-  public async save(data: object): Promise<string> {
-      const res = await axios.post(
-        this.BASE_URL + "/ipfs/object/put",
-        data,
-        {
-            headers: {
-                Authorization: `Bearer: ${this.token}`,
-                contentType: "application/json"
-            }
-        }
-      );
+  public async save(data: object): Promise<any> {
+    try {
+      const res = await axios.post(this.BASE_URL + "/ipfs/object/put", data, {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          contentType: "application/json",
+        },
+      });
 
-      console.log(res)
-    return "a"
+      console.log(res);
+      return res;
+    } catch (error) {
+    //   console.log(error?.response);
+      return "failed";
+    }
   }
 }
 
