@@ -1,6 +1,7 @@
 //requiring path and fs modules
-import path from "path"
-import fs from "fs"
+import path from "path";
+import fs from "fs";
+import { Socket } from "socket.io";
 
 interface eventFile {
   name: string;
@@ -9,15 +10,16 @@ interface eventFile {
 
 let eventList: eventFile[] = [];
 
-module.exports = {
-  reloadEvents: async function () {
-    //gets all events functions in folder
-    await searchDir("");
-    function searchDir(dir: string) {
-      //joining path of directory
-      const directoryPath = path.join(__dirname + dir);
-      //passsing directoryPath and callback function
-      fs.readdir(directoryPath, (err: NodeJS.ErrnoException | null, files: string[]) => {
+export const reloadEvents = async () => {
+  //gets all events functions in folder
+  await searchDir("");
+  function searchDir(dir: string) {
+    //joining path of directory
+    const directoryPath = path.join(__dirname + dir);
+    //passsing directoryPath and callback function
+    fs.readdir(
+      directoryPath,
+      (err: NodeJS.ErrnoException | null, files: string[]) => {
         //handling error
         if (err) {
           return console.log("Unable to scan directory: " + err);
@@ -32,14 +34,15 @@ module.exports = {
             }
           }
         });
-      });
-    }
-  },
-  connectSocket: async (socket: any) => {
-    eventList.forEach((event: eventFile) => {
-      socket.on(event.name, async (props: any) => {
-        await event.event(socket, props);
-      });
+      }
+    );
+  }
+};
+
+export const connectSocket = (socket: Socket) => {
+  eventList.forEach((event: eventFile) => {
+    socket.on(event.name, async (props: any) => {
+      await event.event(socket, props);
     });
-  },
+  });
 };

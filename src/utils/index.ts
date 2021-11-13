@@ -19,7 +19,7 @@ module.exports = {
       //joining path of directory
       const directoryPath = path.join(__dirname + dir);
       //passsing directoryPath and callback function
-      fs.readdir(directoryPath, function (err: string, files: string[]) {
+      fs.readdir(directoryPath, (err: NodeJS.ErrnoException | null, files: string[]) => {
         //handling error
         if (err) {
           return console.log("Unable to scan directory: " + err);
@@ -38,7 +38,7 @@ module.exports = {
     }
   },
   connectSocket: async (socket: any) => {
-    utilList.forEach((event: eventFile) => {
+    utilList.forEach((event: utilFile) => {
       socket.on(event.name, async (props: any) => {
         await event.event(socket, props);
       });
