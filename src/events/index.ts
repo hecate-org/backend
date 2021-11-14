@@ -1,7 +1,7 @@
 import {
   AuthStartMessage,
   GatewayMessage,
-  OpCode
+  OpCode,
 } from "@hecate-org/blingaton-types/build";
 import { replyAuth, replyAuthMessage } from "../utils/socketCommunication";
 
@@ -112,6 +112,7 @@ type IndexedHandlers = keyof typeof EventHandlers;
 type HandlerCallback = (s: Socket, data: GatewayMessage) => void;
 
 export const connectSocket = (socket: Socket) => {
+  replyAuth(socket, OpCode.hello);
   eventList.forEach((event: eventFile) => {
     socket.on(event.name, (data: any) => {
       if (typeof data != "object") {
