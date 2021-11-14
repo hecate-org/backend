@@ -10,6 +10,7 @@ import { Socket } from "socket.io";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import { addSocketConnection } from "../utils/socketConnections";
 
 interface eventFile {
   name: string;

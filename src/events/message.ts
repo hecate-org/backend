@@ -5,20 +5,21 @@ import prisma from "../utils/prismaHandler";
 module.exports = {
   name: "message",
   event: async (s: Socket, data: Message) => {
+    console.log("received Message: ", data);
     const channel = (await prisma.channel.findFirst({
       where: {
         id: data.channel,
       },
     }))!;
 
-    prisma.message.create({
+    await prisma.message.create({
       data: {
         content: data.content,
         channelId: data.channel,
         type: data.type,
-        authorId:channel?.authorId
+        authorId: channel?.authorId,
       },
     });
-    s.to(data.channel.toString()).emit("message",data)
+    s.to(data.channel.toString()).emit("message", data);
   },
 };

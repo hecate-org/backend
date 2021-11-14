@@ -21,7 +21,7 @@ model Channel {
 
 model Message {
   id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
+  timestamp DateTime @default(now())
   type      String   @default("message")
   content   String
   channelId Int
