@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Channel {
@@ -21,7 +21,7 @@ model Channel {
 
 model Message {
   id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now()) @db.Timestamp(6)
+  createdAt DateTime @default(now())
   type      String   @default("message")
   content   String
   channelId Int
@@ -32,7 +32,7 @@ model Message {
 
 model User {
   id      Int       @id @default(autoincrement())
-  name    String?   @db.VarChar(255)
+  name    String?   
   Message Message[]
   Channel Channel[]
 }

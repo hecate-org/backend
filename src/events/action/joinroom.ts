@@ -3,12 +3,20 @@ import prisma from "../../utils/prismaHandler";
 import { socketConnections } from "../../utils/socketConnections";
 module.exports = {
   name: "joinRoom",
-  event: async (s: Socket, roomId: number) => {
+  event: async (s: Socket, roomId: string) => {
+    if (roomId == null) return;
+
+    let roomIdNumber:number;
+    try {
+      roomIdNumber = Number.parseInt(roomId);
+    } catch {
+      return;
+    }
     const socketConnection = socketConnections[s.id];
     const channel = await prisma.channel.findFirst({
       where: {
         authorId: Number.parseInt(socketConnection),
-        id: roomId,
+        id: roomIdNumber,
       },
     });
     if (channel) {
