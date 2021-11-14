@@ -1,3 +1,4 @@
+import { AES, enc } from "crypto-js";
 import {
   AuthStartMessage,
   GatewayMessage,
@@ -5,7 +6,6 @@ import {
 } from "@hecate-org/blingaton-types/build";
 import { replyAuth, replyAuthMessage } from "../utils/socketCommunication";
 
-import { AES } from "crypto-js";
 import { Socket } from "socket.io";
 import crypto from "crypto";
 import fs from "fs";
@@ -80,7 +80,6 @@ const EventHandlers = {
     }
 
     const secretToken = crypto.randomBytes(64).toString("base64");
-
     replyAuth(s, OpCode.auth_reply, {
       key: crypto
         .publicEncrypt(
@@ -115,53 +114,54 @@ export const connectSocket = (socket: Socket) => {
   replyAuth(socket, OpCode.hello);
   eventList.forEach((event: eventFile) => {
     socket.on(event.name, (data: any) => {
-      console.log(event.name)
-      event.event(socket, data);
-      // if (typeof data != "object") {
-      //   try {
-      //     data = JSON.parse(data) as object;
-      //   } catch (e) {
-      //     return replyAuthMessage(
-      //       socket,
-      //       OpCode.exception,
-      //       `Invalid payload body (must be valid JSON). [${e}]`
-      //     );
-      //   }
-      // }
+      if (typeof data != "object") {
+        try {
+          data = JSON.parse(data) as object;
+        } catch (e) {
+          return replyAuthMessage(
+            socket,
+            OpCode.exception,
+            `Invalid payload body (must be valid JSON). [${e}]`
+          );
+        }
+      }
 
-      // if (isGatewayMessage(data)) {
-      //   const handler: HandlerCallback | undefined =
-      //     EventHandlers?.[data.op as IndexedHandlers];
+      if (isGatewayMessage(data)) {
+        const handler: HandlerCallback | undefined =
+          EventHandlers?.[data.op as IndexedHandlers];
 
-      //   if (handler == undefined) {
-      //     if (Object.values(OpCode).includes(data.op))
-      //       return replyAuthMessage(
-      //         socket,
-      //         OpCode.exception,
-      //         "The received OpCode can only be sent by the server."
-      //       );
+        if (handler == undefined) {
+          if (Object.values(OpCode).includes(data.op))
+            return replyAuthMessage(
+              socket,
+              OpCode.exception,
+              "The received OpCode can only be sent by the server."
+            );
 
-      //     const token: string | undefined = sessions?.[socket.id];
+          const token: string | undefined = sessions?.[socket.id];
 
-      //     if (!token)
-      //       return replyAuthMessage(
-      //         socket,
-      //         OpCode.exception,
-      //         "The session has not been secured yet, which is required for communication to happen."
-      //       );
+          if (!token)
+            return replyAuthMessage(
+              socket,
+              OpCode.exception,
+              "The session has not been secured yet, which is required for communication to happen."
+            );
 
-      //     if (data?.data) data = AES.decrypt(data.data, token) as object;
+          if (data?.data)
+            data = JSON.parse(
+              AES.decrypt(data.data, token).toString(enc.Utf8)
+            ) as object;
 
-      //     return event.event(socket, data);
-      //   }
+          return event.event(socket, data);
+        }
 
-      //   handler(socket, data);
-      // } else
-      //   replyAuthMessage(
-      //     socket,
-      //     OpCode.exception,
-      //     "Invalid structure. An opcode must be present in the message."
-      //   );
+        handler(socket, data);
+      } else
+        replyAuthMessage(
+          socket,
+          OpCode.exception,
+          "Invalid structure. An opcode must be present in the message."
+        );
     });
   });
 };
