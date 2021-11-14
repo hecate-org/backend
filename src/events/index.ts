@@ -7,10 +7,10 @@ import {
 import { replyAuth, replyAuthMessage } from "../utils/socketCommunication";
 
 import { Socket } from "socket.io";
+import { addSocketConnection } from "../utils/socketConnections";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
-import { addSocketConnection } from "../utils/socketConnections";
 
 interface eventFile {
   name: string;
@@ -111,7 +111,23 @@ const EventHandlers = {
 type IndexedHandlers = keyof typeof EventHandlers;
 type HandlerCallback = (s: Socket, data: GatewayMessage) => void;
 
-export const connectSocket = (socket: Socket) => {
+interface CustomSocket extends Socket {
+  reply: (ev: string, args: object) => void;
+}
+
+export const connectSocket = (s: Socket) => {
+  const socket = s as CustomSocket;
+  socket.reply = (ev: string, args: object) => {
+    const data = {
+      op: 69420,
+      data: AES.encrypt(
+        enc.Utf8.parse(JSON.stringify(args)),
+        sessions?.[socket.id]
+      ).toString(),
+    };
+
+    s.emit(ev, data);
+  };
   replyAuth(socket, OpCode.hello);
   eventList.forEach((event: eventFile) => {
     socket.on(event.name, (data: any) => {
