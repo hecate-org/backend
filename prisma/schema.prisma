@@ -10,28 +10,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Channel{
-  id        Int      @id @default(autoincrement())
-  name      String
-  authorId  Int
-  Message   Message[]
-  User      User     @relation(fields: [authorId], references: [id])
+model Channel {
+  id          Int       @id @default(autoincrement())
+  name        String
+  authorId    Int
+  description String
+  Message     Message[]
+  User        User      @relation(fields: [authorId], references: [id])
 }
 
 model Message {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now()) @db.Timestamp(6)
-  type      String   @default("Message")
+  type      String   @default("message")
   content   String
   channelId Int
   authorId  Int
-  Channel   Channel     @relation(fields: [channelId], references: [id])
+  Channel   Channel  @relation(fields: [channelId], references: [id])
   User      User     @relation(fields: [authorId], references: [id])
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String?  @db.VarChar(255)
-  Message   Message[]
-  Channel   Channel[]
+  id      Int       @id @default(autoincrement())
+  name    String?   @db.VarChar(255)
+  Message Message[]
+  Channel Channel[]
 }

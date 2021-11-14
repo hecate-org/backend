@@ -19,5 +19,6 @@ module.exports = {
         authorId:channel?.authorId
       },
     });
+    s.to(data.channel.toString()).emit("message",data)
   },
 };

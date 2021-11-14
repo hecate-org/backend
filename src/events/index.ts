@@ -1,7 +1,7 @@
 import {
   AuthStartMessage,
   GatewayMessage,
-  OpCode
+  OpCode,
 } from "@hecate-org/blingaton-types/build";
 import { replyAuth, replyAuthMessage } from "../utils/socketCommunication";
 
