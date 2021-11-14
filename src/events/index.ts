@@ -112,6 +112,7 @@ type IndexedHandlers = keyof typeof EventHandlers;
 type HandlerCallback = (s: Socket, data: GatewayMessage) => void;
 
 export const connectSocket = (socket: Socket) => {
+  replyAuth(socket, OpCode.hello);
   eventList.forEach((event: eventFile) => {
     socket.on(event.name, (data: any) => {
       if (typeof data != "object") {
@@ -147,7 +148,7 @@ export const connectSocket = (socket: Socket) => {
               "The session has not been secured yet, which is required for communication to happen."
             );
 
-          if (data.data) data = AES.decrypt(data.data, token) as object;
+          if (data?.data) data = AES.decrypt(data.data, token) as object;
 
           return event.event(socket, data);
         }
